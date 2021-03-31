@@ -6,12 +6,12 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.*;
 
 import java.time.LocalDate;
 import java.time.Month;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
+import java.time.Year;
+import java.util.*;
 
 @DisplayName("<<= BookShelf testing =>>")
 public class BookShelfSpec {
@@ -84,10 +84,30 @@ public class BookShelfSpec {
     @Test
     void bookshelfArrangedByUserProvidedCriteria() {
         shelf.add(effectiveJava,codeComplete,mythicalManMonth);
-        List<Book> books = shelf.arrange(Comparator.<Book>naturalOrder().reversed());
-        assertEquals(Arrays.asList(mythicalManMonth, effectiveJava, codeComplete),
-                books,
-                () -> "Books in a bookshelf are arranged in descending order of book title"
-        );
+        Comparator<Book> reversed = Comparator.<Book>naturalOrder().reversed();
+        List<Book> books = shelf.arrange(reversed);
+        assertThat(books).isSortedAccordingTo(reversed);
+    }
+
+
+    @Test
+    @DisplayName("books inside bookshelf are grouped by publication year")
+    void groupBooksInsideBookShelfByPublicationYear() {
+        shelf.add(effectiveJava, codeComplete, mythicalManMonth);
+
+        Map<Year, List<Book>> booksByPublicationYear = shelf.
+                groupByPublicationYear();
+
+        assertThat(booksByPublicationYear)
+                .containsKey(Year.of(2008))
+                .containsValues(Arrays.asList(effectiveJava));
+
+        assertThat(booksByPublicationYear)
+                .containsKey(Year.of(2004))
+                .containsValues(Collections.singletonList(codeComplete));
+
+        assertThat(booksByPublicationYear)
+                .containsKey(Year.of(1975))
+                .containsValues(Collections.singletonList(mythicalManMonth));
     }
 }
